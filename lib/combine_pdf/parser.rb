@@ -363,13 +363,17 @@ module CombinePDF
           # advance by the publshed stream length (if any)
           old_pos = @scanner.pos
           if(out.last.is_a?(Hash) && out.last[:Length].is_a?(Integer) && out.last[:Length] > 2)
-            @scanner.pos += out.last[:Length] - 2
+            begin
+              @scanner.pos += out.last[:Length] - 2
+            rescue RangeError
+              # do nothing
+            end
           end
 
           # the following was dicarded because some PDF files didn't have an EOL marker as required
           # str = @scanner.scan_until(/(\r\n|\r|\n)endstream/)
           # instead, a non-strict RegExp is used:
-          
+
 
           # raise error if the stream doesn't end.
           unless @scanner.skip_until(/endstream/)
@@ -377,8 +381,8 @@ module CombinePDF
           end
           length = @scanner.pos - (old_pos + 9)
           length = 0 if(length < 0)
-          length -= 1 if(@scanner.string[old_pos + length - 1] == "\n") 
-          length -= 1 if(@scanner.string[old_pos + length - 1] == "\r") 
+          length -= 1 if(@scanner.string[old_pos + length - 1] == "\n")
+          length -= 1 if(@scanner.string[old_pos + length - 1] == "\r")
           str = (length > 0) ? @scanner.string.slice(old_pos, length) : ''
 
           # warn "CombinePDF parser: detected Stream #{str.length} bytes long #{str[0..3]}...#{str[-4..-1]}"
